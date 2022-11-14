@@ -176,20 +176,33 @@ impl TinyInst {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn tinyinst() {
-        let tinyinst_args = vec![
-            "-instrument_module".to_string(),
-            "test.exe".to_string(),
-            // "-coverage_file".to_string(),
-            // "coverage.txt".to_string(),
-        ];
+    fn tinyinst_ok() {
+        let tinyinst_args = vec!["-instrument_module".to_string(), "test.exe".to_string()];
 
-        let program_args = vec![".\\test\\test.exe".to_string(), "input.txt".to_string()];
+        let program_args = vec![
+            ".\\test\\test.exe".to_string(),
+            ".\\test\\ok_input.txt".to_string(),
+        ];
 
         unsafe {
             let mut tinyinst = super::TinyInst::new(tinyinst_args, program_args, 5000);
             let result = tinyinst.run();
             assert_eq!(result, super::litecov::RunResult::OK);
+        }
+    }
+    #[test]
+    fn tinyinst_crash() {
+        let tinyinst_args = vec!["-instrument_module".to_string(), "test.exe".to_string()];
+
+        let program_args = vec![
+            ".\\test\\test.exe".to_string(),
+            ".\\test\\crash_input.txt".to_string(),
+        ];
+
+        unsafe {
+            let mut tinyinst = super::TinyInst::new(tinyinst_args, program_args, 5000);
+            let result = tinyinst.run();
+            assert_eq!(result, super::litecov::RunResult::CRASH);
         }
     }
 }
