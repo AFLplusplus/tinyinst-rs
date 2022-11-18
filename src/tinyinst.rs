@@ -114,6 +114,7 @@ impl litecov::Coverage {
 pub struct TinyInst {
     tinyinst_ptr: UniquePtr<litecov::TinyInstInstrumentation>,
     program_args: Vec<String>,
+    coverage_ptr: UniquePtr<litecov::Coverage>,
     timeout: u32,
 }
 
@@ -148,6 +149,7 @@ impl TinyInst {
             tinyinst_ptr,
             program_args,
             timeout,
+            coverage_ptr: litecov::Coverage::new(),
         }
     }
 
@@ -169,7 +171,22 @@ impl TinyInst {
             self.timeout,
             self.timeout,
         )
-        // litecov::RunResult::OK
+    }
+
+    pub unsafe fn bitmap_coverage(
+        &mut self,
+        bitmap: *mut u8,
+        map_size: usize,
+        clear_coverage: bool,
+    ) {
+        self.tinyinst_ptr
+            .pin_mut()
+            .GetCoverage(self.coverage_ptr.pin_mut(), clear_coverage);
+        litecov::get_coverage_map(bitmap, map_size, self.coverage_ptr.pin_mut());
+    }
+
+    pub fn vec_coverage() {
+        unimplemented!()
     }
 }
 
@@ -183,11 +200,15 @@ mod tests {
             ".\\test\\test.exe".to_string(),
             ".\\test\\ok_input.txt".to_string(),
         ];
+        const MAP_SIZE: usize = 1024 * 1024;
+        let mut bitmap = [0u8; MAP_SIZE];
 
         unsafe {
             let mut tinyinst = super::TinyInst::new(tinyinst_args, program_args, 5000);
             let result = tinyinst.run();
+            tinyinst.bitmap_coverage(bitmap.as_mut_ptr(), bitmap.len(), true);
             assert_eq!(result, super::litecov::RunResult::OK);
+            assert_eq!(bitmap.iter().filter(|&x| *x == 1).count(), 1412);
         }
     }
     #[test]
@@ -198,11 +219,15 @@ mod tests {
             ".\\test\\test.exe".to_string(),
             ".\\test\\crash_input.txt".to_string(),
         ];
+        const MAP_SIZE: usize = 1024 * 1024;
+        let mut bitmap = [0u8; MAP_SIZE];
 
         unsafe {
             let mut tinyinst = super::TinyInst::new(tinyinst_args, program_args, 5000);
             let result = tinyinst.run();
+            tinyinst.bitmap_coverage(bitmap.as_mut_ptr(), bitmap.len(), true);
             assert_eq!(result, super::litecov::RunResult::CRASH);
+            // assert_eq!(bitmap.iter().filter(|&x| *x == 1).count(), 1307);
         }
     }
 }
