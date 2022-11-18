@@ -44,6 +44,13 @@ fn main() {
         .status()
         .unwrap();
 
+    // cxx
+    Command::new("cxxbridge")
+        .args(&["--header", "-o"])
+        .arg(&format!("{}/cxx.h", &tinyinst))
+        .status()
+        .unwrap();
+
     // shim
     std::fs::copy("./src/shim.cc", "./Tinyinst/shim.cc").unwrap();
     std::fs::copy("./src/shim.h", "./Tinyinst/shim.h").unwrap();

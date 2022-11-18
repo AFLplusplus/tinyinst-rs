@@ -10,4 +10,5 @@ copy test\tinyinst-coverage.cpp TinyInst\tinyinst-coverage.cpp
 
 cxxbridge ./src/tinyinst.rs -o ./TinyInst/bridge.cc
 cxxbridge ./src/tinyinst.rs --header -o ./TinyInst/bridge.h
+cxxbridge --header -o ./TinyInst/cxx.h
 cmake --build build

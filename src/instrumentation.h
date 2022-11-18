@@ -20,6 +20,7 @@ limitations under the License.
 #include <string>
 #include "aflcov.h"
 #include "runresult.h"
+#include "cxx.h"
 
 class Instrumentation
 {
@@ -37,7 +38,7 @@ public:
   virtual void CleanTarget() = 0;
 
   virtual bool HasNewCoverage() = 0;
-  virtual void GetCoverage(Coverage &coverage, bool clear_coverage) = 0;
+  virtual void GetCoverage(rust::Vec<uint64_t> &coverage, bool clear_coverage) = 0;
   virtual void ClearCoverage() = 0;
   virtual void IgnoreCoverage(Coverage &coverage) = 0;
 

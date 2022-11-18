@@ -1,5 +1,5 @@
 #include "aflcov.h"
-void AFLCov::GetCoverage(Coverage &coverage, bool clear_coverage)
+void AFLCov::GetCoverage(rust::Vec<uint64_t> &coverage, bool clear_coverage)
 {
     CollectCoverage();
     for (ModuleInfo *module : instrumented_modules)
@@ -11,17 +11,24 @@ void AFLCov::GetCoverage(Coverage &coverage, bool clear_coverage)
 
         // check if that module is already in the coverage list
         // (if the client calls with non-empty initial coverage)
-        ModuleCoverage *module_coverage =
-            GetModuleCoverage(coverage, module->module_name);
-        if (module_coverage)
-        {
-            module_coverage->offsets.insert(data->collected_coverage.begin(),
-                                            data->collected_coverage.end());
-        }
-        else
-        {
-            coverage.push_back({module->module_name, data->collected_coverage});
-        }
+        // ModuleCoverage *module_coverage =
+        //     GetModuleCoverage(coverage, module->module_name);
+        // if (module_coverage)
+        // {
+        // coverage.assign(data->collected_coverage.begin(),
+        //                 data->collected_coverage.end());
+        // std::copy(coverage.begin(), coverage.end(), std::back_inserter(data->collected_coverage));
+        // for (auto &offset : data->collected_coverage)
+        // {
+        //     coverage.push_back(offset);
+        // }
+        std::copy(data->collected_coverage.begin(), data->collected_coverage.end(), std::back_inserter(coverage));
+
+        // }
+        // else
+        // {
+        //     coverage.push_back({module->module_name, data->collected_coverage});
+        // }
     }
     if (clear_coverage)
         ClearCoverage();

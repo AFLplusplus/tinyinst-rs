@@ -168,8 +168,7 @@ bool TinyInstInstrumentation::HasNewCoverage()
   return instrumentation->HasNewCoverage();
 }
 
-void TinyInstInstrumentation::GetCoverage(Coverage &coverage,
-                                          bool clear_coverage)
+void TinyInstInstrumentation::GetCoverage(rust::Vec<uint64_t> &coverage, bool clear_coverage)
 {
   instrumentation->GetCoverage(coverage, clear_coverage);
 }

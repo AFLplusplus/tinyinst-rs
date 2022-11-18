@@ -23,6 +23,8 @@ limitations under the License.
 #include "common.h"
 // #include "litecov.h"
 #include "aflcov.h"
+#include <vector>
+#include "cxx.h"
 
 uint8_t *trace_bits;
 
@@ -148,7 +150,7 @@ void RunTarget(int argc, char **argv, unsigned int pid, uint32_t timeout)
 
 int main(int argc, char **argv)
 {
-  printf("AFLCov TinyInst Coverage Tool v1.0\n");
+  printf("AFLCov TinyInst Coverage Tool v2.0\n");
   instrumentation = new AFLCov();
   instrumentation->Init(argc, argv);
 
@@ -180,6 +182,7 @@ int main(int argc, char **argv)
   }
 
   Coverage coverage, newcoverage;
+  rust::Vec<uint64_t> coverage_vector;
 
   for (int i = 0; i < num_iterations; i++)
   {
@@ -187,16 +190,17 @@ int main(int argc, char **argv)
 
     Coverage newcoverage;
 
-    instrumentation->GetCoverage(newcoverage, true);
+    instrumentation->GetCoverage(coverage_vector, true);
+    printf("Coverage: %zd\n", coverage_vector.size());
 
-    for (auto iter = newcoverage.begin(); iter != newcoverage.end(); iter++)
-    {
-      printf("Found %zd new offsets in %s\n", iter->offsets.size(), iter->module_name.c_str());
-    }
+    // for (auto iter = newcoverage.begin(); iter != newcoverage.end(); iter++)
+    // {
+    //   printf("Found %zd new offsets in %s\n", iter->offsets.size(), iter->module_name.c_str());
+    // }
 
-    instrumentation->IgnoreCoverage(newcoverage);
+    // instrumentation->IgnoreCoverage(newcoverage);
 
-    MergeCoverage(coverage, newcoverage);
+    // MergeCoverage(coverage, newcoverage);
   }
 
   if (outfile)

@@ -19,6 +19,7 @@ limitations under the License.
 #include <inttypes.h>
 #include <string>
 #include "instrumentation.h"
+#include "cxx.h"
 
 class TinyInstInstrumentation : public Instrumentation
 {
@@ -35,7 +36,7 @@ public:
   void CleanTarget() override;
 
   bool HasNewCoverage() override;
-  void GetCoverage(Coverage &coverage, bool clear_coverage) override;
+  void GetCoverage(rust::Vec<uint64_t> &coverage, bool clear_coverage) override;
   void ClearCoverage() override;
   void IgnoreCoverage(Coverage &coverage) override;
 
