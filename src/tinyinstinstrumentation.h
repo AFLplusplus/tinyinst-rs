@@ -20,8 +20,6 @@ limitations under the License.
 #include <string>
 #include "instrumentation.h"
 
-class LiteCov;
-
 class TinyInstInstrumentation : public Instrumentation
 {
 public:

@@ -22,18 +22,22 @@ limitations under the License.
 
 #include <sstream>
 
-std::string Instrumentation::AnonymizeAddress(void* addr) {
+std::string Instrumentation::AnonymizeAddress(void *addr)
+{
   char buf[20];
   sprintf(buf, "%p", addr);
   int len = (int)strlen(buf);
   int firstnonzero = len;
-  for (int i = 0; i < len; i++) {
-    if (buf[i] != '0') {
+  for (int i = 0; i < len; i++)
+  {
+    if (buf[i] != '0')
+    {
       firstnonzero = i;
       break;
     }
   }
-  for (int i = firstnonzero; i < len - 3; i++) {
+  for (int i = firstnonzero; i < len - 3; i++)
+  {
     buf[i] = 'x';
   }
   return std::string(buf);
