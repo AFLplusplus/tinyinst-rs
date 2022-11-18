@@ -1,48 +1,38 @@
 #pragma once
 #include "litecov.h"
-// #include <unordered_map>
-// class AFLCov : public LiteCov {
-//  public:
-//   AFLCov(uint8_t *_coverage, size_t _capacity) : LiteCov() {
-//     coverage = _coverage;
-//     capacity = _capacity;
-//     cur_map_offset = 0;
-//   }
+#include "coverage.h"
+#include <string>
+#include <set>
+#include <list>
 
-//   void Init(int argc, char **argv) override {
-//     LiteCov::Init(argc, argv);
-//   }
-//   void add_coverage(uint8_t addr) {
-//     if (addr < capacity) { coverage[addr] = 1; }
-//   }
-//   void print_coverage() {
-//     for (size_t i = 0; i < capacity; i++) {
-//       if (coverage[i] == 1) { printf("Address %llx is covered\n", i); }
-//     }
-//   }
-//   void GetCoverage(Coverage &coverage, bool clear_coverage) {
-//     CollectCoverage();
-//     for (ModuleInfo *module : instrumented_modules) {
-//       ModuleCovData *data = (ModuleCovData *)module->client_data;
+typedef std::vector<ModuleCoverage> VecCoverage;
+class AFLCov : public LiteCov
+{
+public:
+    void GetCoverage(VecCoverage &coverage, bool clear_coverage);
+    void IgnoreCoverage(VecCoverage &coverage);
+};
 
-//       if (data->collected_coverage.empty()) continue;
+ModuleCoverage *GetModuleCoverage(VecCoverage &coverage, std::string &name);
 
-//       // check if that module is already in the coverage list
-//       // (if the client calls with non-empty initial coverage)
-//       ModuleCoverage *module_coverage =
-//           GetModuleCoverage(coverage, module->module_name);
-//       if (module_coverage) {
-//         module_coverage->offsets.insert(data->collected_coverage.begin(),
-//                                         data->collected_coverage.end());
-//       } else {
-//         coverage.push_back({module->module_name, data->collected_coverage});
-//       }
-//     }
-//     if (clear_coverage) ClearCoverage();
-//   }
+void PrintCoverage(VecCoverage &coverage);
+void WriteCoverage(VecCoverage &coverage, const char *filename);
 
-//   uint8_t *coverage;
-//   size_t   capacity;
-//   size_t   cur_map_offset;
-//   // std::unordered_map<uint64_t, uint64_t> addr_offset_map;
-// };
+void MergeCoverage(VecCoverage &coverage, VecCoverage &toAdd);
+void CoverageIntersection(VecCoverage &coverage1,
+                          VecCoverage &coverage2,
+                          VecCoverage &result);
+// returns coverage2 not present in coverage1
+void CoverageDifference(VecCoverage &coverage1,
+                        VecCoverage &coverage2,
+                        VecCoverage &result);
+// returns coverage2 not present in coverage1 and vice versa
+void CoverageSymmetricDifference(VecCoverage &coverage1,
+                                 VecCoverage &coverage2,
+                                 VecCoverage &result);
+bool CoverageContains(VecCoverage &coverage1, VecCoverage &coverage2);
+
+void ReadCoverageBinary(VecCoverage &coverage, char *filename);
+void ReadCoverageBinary(VecCoverage &coverage, FILE *fp);
+void WriteCoverageBinary(VecCoverage &coverage, char *filename);
+void WriteCoverageBinary(VecCoverage &coverage, FILE *fp);

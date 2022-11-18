@@ -1,0 +1,14 @@
+{
+    "files.associations": {
+        "*.md": "markdown",
+        "*.h": "cpp",
+        "xstring": "cpp",
+        "list": "cpp",
+        "map": "cpp",
+        "unordered_map": "cpp",
+        "vector": "cpp",
+        "xhash": "cpp",
+        "xtree": "cpp",
+        "xiosbase": "cpp"
+    }
+}
