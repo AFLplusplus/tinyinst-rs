@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Google LLC
+Copyright 2020 Google LLC. Modified by biazo
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,13 +18,13 @@ limitations under the License.
 
 #include "common.h"
 #include "tinyinstinstrumentation.h"
-#include "litecov.h"
+#include "aflcov.h"
 
 #include <sstream>
 
 void TinyInstInstrumentation::Init(int argc, char **argv)
 {
-  instrumentation = new LiteCov();
+  instrumentation = new AFLCov();
   instrumentation->Init(argc, argv);
 
   persist = GetBinaryOption("-persist", argc, argv, false);
@@ -169,7 +169,7 @@ bool TinyInstInstrumentation::HasNewCoverage()
   return instrumentation->HasNewCoverage();
 }
 
-void TinyInstInstrumentation::GetCoverage(Coverage &coverage,
+void TinyInstInstrumentation::GetCoverage(VecCoverage &coverage,
                                           bool clear_coverage)
 {
   instrumentation->GetCoverage(coverage, clear_coverage);
@@ -180,7 +180,7 @@ void TinyInstInstrumentation::ClearCoverage()
   instrumentation->ClearCoverage();
 }
 
-void TinyInstInstrumentation::IgnoreCoverage(Coverage &coverage)
+void TinyInstInstrumentation::IgnoreCoverage(VecCoverage &coverage)
 {
   instrumentation->IgnoreCoverage(coverage);
 }

@@ -9,6 +9,7 @@
         "vector": "cpp",
         "xhash": "cpp",
         "xtree": "cpp",
-        "xiosbase": "cpp"
+        "xiosbase": "cpp",
+        "memory": "cpp"
     }
 }

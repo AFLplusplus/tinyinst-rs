@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Google LLC
+Copyright 2020 Google LLC. Modified by biazo
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -148,6 +148,7 @@ void RunTarget(int argc, char **argv, unsigned int pid, uint32_t timeout)
 
 int main(int argc, char **argv)
 {
+  printf("AFLCov TinyInst Coverage Tool v1.0\n");
   instrumentation = new AFLCov();
   instrumentation->Init(argc, argv);
 

@@ -23,7 +23,6 @@ pub mod litecov {
     }
 
     unsafe extern "C++" {
-        include!("coverage.h");
         // for constructors.
         include!("shim.h");
         include!("tinyinstinstrumentation.h");
@@ -35,6 +34,7 @@ pub mod litecov {
 
         type Coverage;
         type ModuleCoverage;
+        type VecCoverage;
 
         pub fn coverage_new() -> UniquePtr<Coverage>;
 
@@ -76,13 +76,13 @@ pub mod litecov {
 
         pub fn GetCoverage(
             self: Pin<&mut TinyInstInstrumentation>,
-            coverage: Pin<&mut Coverage>,
+            coverage: Pin<&mut VecCoverage>,
             clear_coverage: bool,
         );
         pub fn ClearCoverage(self: Pin<&mut TinyInstInstrumentation>);
         pub fn IgnoreCoverage(
             self: Pin<&mut TinyInstInstrumentation>,
-            coverage: Pin<&mut Coverage>,
+            coverage: Pin<&mut VecCoverage>,
         );
 
         // Testing AFLCOV

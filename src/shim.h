@@ -12,3 +12,6 @@ void get_coverage_map(uint8_t *bitmap, size_t map_size, Coverage &newcoverage);
 
 // tinyinstinstrumentation
 std::unique_ptr<TinyInstInstrumentation> tinyinstinstrumentation_new();
+
+// aflcov
+std::unique_ptr<VecCoverage> veccoverage_new();

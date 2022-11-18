@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Google LLC
+Copyright 2020 Google LLC. Modified by biazo
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ limitations under the License.
 
 #include <inttypes.h>
 #include <string>
-#include "coverage.h"
+#include "AFLCov.h"
 #include "instrumentation.h"
 
 class LiteCov;
@@ -38,16 +38,16 @@ public:
   void CleanTarget() override;
 
   bool HasNewCoverage() override;
-  void GetCoverage(Coverage &coverage, bool clear_coverage) override;
+  void GetCoverage(VecCoverage &coverage, bool clear_coverage) override;
   void ClearCoverage() override;
-  void IgnoreCoverage(Coverage &coverage) override;
+  void IgnoreCoverage(VecCoverage &coverage) override;
 
   uint64_t GetReturnValue() override;
 
   std::string GetCrashName() override;
 
 protected:
-  LiteCov *instrumentation;
+  AFLCov *instrumentation;
   bool persist;
   int num_iterations;
   int cur_iteration;
