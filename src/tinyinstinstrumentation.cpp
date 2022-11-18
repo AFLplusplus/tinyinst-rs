@@ -18,7 +18,6 @@ limitations under the License.
 
 #include "common.h"
 #include "tinyinstinstrumentation.h"
-#include "aflcov.h"
 
 #include <sstream>
 
@@ -169,7 +168,7 @@ bool TinyInstInstrumentation::HasNewCoverage()
   return instrumentation->HasNewCoverage();
 }
 
-void TinyInstInstrumentation::GetCoverage(VecCoverage &coverage,
+void TinyInstInstrumentation::GetCoverage(Coverage &coverage,
                                           bool clear_coverage)
 {
   instrumentation->GetCoverage(coverage, clear_coverage);
@@ -180,7 +179,7 @@ void TinyInstInstrumentation::ClearCoverage()
   instrumentation->ClearCoverage();
 }
 
-void TinyInstInstrumentation::IgnoreCoverage(VecCoverage &coverage)
+void TinyInstInstrumentation::IgnoreCoverage(Coverage &coverage)
 {
   instrumentation->IgnoreCoverage(coverage);
 }

@@ -179,13 +179,13 @@ int main(int argc, char **argv)
     return 0;
   }
 
-  VecCoverage coverage, newcoverage;
+  Coverage coverage, newcoverage;
 
   for (int i = 0; i < num_iterations; i++)
   {
     RunTarget(target_argc, target_argv, pid, 0xFFFFFFFF);
 
-    VecCoverage newcoverage;
+    Coverage newcoverage;
 
     instrumentation->GetCoverage(newcoverage, true);
 

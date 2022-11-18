@@ -34,7 +34,6 @@ pub mod litecov {
 
         type Coverage;
         type ModuleCoverage;
-        type VecCoverage;
 
         pub fn coverage_new() -> UniquePtr<Coverage>;
 
@@ -76,13 +75,13 @@ pub mod litecov {
 
         pub fn GetCoverage(
             self: Pin<&mut TinyInstInstrumentation>,
-            coverage: Pin<&mut VecCoverage>,
+            coverage: Pin<&mut Coverage>,
             clear_coverage: bool,
         );
         pub fn ClearCoverage(self: Pin<&mut TinyInstInstrumentation>);
         pub fn IgnoreCoverage(
             self: Pin<&mut TinyInstInstrumentation>,
-            coverage: Pin<&mut VecCoverage>,
+            coverage: Pin<&mut Coverage>,
         );
 
         // Testing AFLCOV
@@ -104,12 +103,6 @@ impl litecov::Coverage {
         litecov::coverage_new()
     }
 }
-
-// impl litecov::AFLCov {
-//     pub unsafe fn new(coverage: *mut u8, capacity: usize) -> UniquePtr<litecov::AFLCov> {
-//         litecov::aflcov_new(coverage, capacity)
-//     }
-// }
 
 pub struct TinyInst {
     tinyinst_ptr: UniquePtr<litecov::TinyInstInstrumentation>,

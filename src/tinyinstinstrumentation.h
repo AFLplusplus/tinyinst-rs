@@ -18,7 +18,6 @@ limitations under the License.
 
 #include <inttypes.h>
 #include <string>
-#include "AFLCov.h"
 #include "instrumentation.h"
 
 class LiteCov;
@@ -38,9 +37,9 @@ public:
   void CleanTarget() override;
 
   bool HasNewCoverage() override;
-  void GetCoverage(VecCoverage &coverage, bool clear_coverage) override;
+  void GetCoverage(Coverage &coverage, bool clear_coverage) override;
   void ClearCoverage() override;
-  void IgnoreCoverage(VecCoverage &coverage) override;
+  void IgnoreCoverage(Coverage &coverage) override;
 
   uint64_t GetReturnValue() override;
 

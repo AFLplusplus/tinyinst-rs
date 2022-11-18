@@ -10,6 +10,9 @@
         "xhash": "cpp",
         "xtree": "cpp",
         "xiosbase": "cpp",
-        "memory": "cpp"
+        "memory": "cpp",
+        "array": "cpp",
+        "xutility": "cpp",
+        "string": "cpp"
     }
 }

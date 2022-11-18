@@ -24,7 +24,3 @@ std::unique_ptr<TinyInstInstrumentation> tinyinstinstrumentation_new()
 {
   return std::make_unique<TinyInstInstrumentation>();
 }
-std::unique_ptr<VecCoverage> veccoverage_new()
-{
-  return std::make_unique<VecCoverage>();
-}
