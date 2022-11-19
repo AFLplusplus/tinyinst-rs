@@ -14,19 +14,12 @@ fn main() {
 
     let cwd = env::current_dir().unwrap().to_string_lossy().to_string();
     let tinyinst = format!("{}/TinyInst", &cwd);
+    println!("cargo:warning=Pulling TinyInst from github");
 
     println!("cargo:warning=Generating Bridge files.");
-
     // Get tinyinst from git
-    Command::new("git")
-        .args(&[
-            "submodule",
-            "update",
-            "--init",
-            "--recursive",
-            "--remote",
-            ".\\TinyInst",
-        ])
+    Command::new("cmd")
+        .args(&["/C", "./build.bat"])
         .status()
         .unwrap();
 
