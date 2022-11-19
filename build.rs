@@ -19,7 +19,7 @@ fn main() {
     println!("cargo:warning=Generating Bridge files.");
     // Get tinyinst from git
     Command::new("cmd")
-        .args(&["/C", "./build.bat"])
+        .args(&["/C", format!("{}/build.bat", &cwd).as_str()])
         .status()
         .unwrap();
 
