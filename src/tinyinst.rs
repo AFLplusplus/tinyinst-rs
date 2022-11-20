@@ -75,7 +75,8 @@ pub mod litecov {
 
         pub fn GetCoverage(
             self: Pin<&mut TinyInstInstrumentation>,
-            coverage: &mut Vec<u64>,
+            coverage: Pin<&mut Coverage>,
+            afl_coverage: &mut Vec<u64>,
             clear_coverage: bool,
         );
         pub fn ClearCoverage(self: Pin<&mut TinyInstInstrumentation>);
@@ -178,31 +179,69 @@ impl TinyInst {
     //     litecov::get_coverage_map(bitmap, map_size, self.coverage_ptr.pin_mut());
     // }
 
-    pub fn vec_coverage(&mut self, coverage: &mut Vec<u64>, clear_coverage: bool) {
+    pub fn vec_coverage(&mut self, afl_coverage: &mut Vec<u64>, clear_coverage: bool) {
+        // Clear coverage if there was previous coverage
+        afl_coverage.clear();
+        self.tinyinst_ptr.pin_mut().GetCoverage(
+            self.coverage_ptr.pin_mut(),
+            afl_coverage,
+            clear_coverage,
+        );
+        // This will mark coverage we have seen as already seen coverage and won't report it again.
+        self.ignore_coverage();
+    }
+    fn ignore_coverage(&mut self) {
         self.tinyinst_ptr
             .pin_mut()
-            .GetCoverage(coverage, clear_coverage);
+            .IgnoreCoverage(self.coverage_ptr.pin_mut());
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::fs::File;
+    use std::io::{Seek, Write};
     #[test]
     fn tinyinst_ok() {
         let tinyinst_args = vec!["-instrument_module".to_string(), "test.exe".to_string()];
+        // Create file to test.
+        let mut file = File::create(".\\test\\test_file.txt").unwrap();
+        file.write_all(b"test1").unwrap();
 
         let program_args = vec![
             ".\\test\\test.exe".to_string(),
-            ".\\test\\ok_input.txt".to_string(),
+            ".\\test\\test_file.txt".to_string(),
         ];
         let mut coverage = Vec::new();
 
         unsafe {
             let mut tinyinst = super::TinyInst::new(tinyinst_args, program_args, 5000);
+
+            // First test case
             let result = tinyinst.run();
-            tinyinst.vec_coverage(&mut coverage, false);
+            tinyinst.vec_coverage(&mut coverage, true);
             assert_eq!(result, super::litecov::RunResult::OK);
-            assert_eq!(coverage.len(), 1412);
+            assert_eq!(coverage.len() <= 1412, true);
+
+            // Second test case for b
+            file.seek(std::io::SeekFrom::Start(0)).unwrap();
+            file.write_all(b"b").unwrap();
+            let result = tinyinst.run();
+            tinyinst.vec_coverage(&mut coverage, true);
+            assert_eq!(result, super::litecov::RunResult::OK);
+
+            // Check if it contains address to if c == 'b' branch. Sometimes it gets address to memset function. Weird windows crap probably?
+            assert_eq!(coverage.contains(&4151), true);
+
+            // Second test case for ba
+            file.seek(std::io::SeekFrom::Start(0)).unwrap();
+            file.write_all(b"ba").unwrap();
+            let result = tinyinst.run();
+            tinyinst.vec_coverage(&mut coverage, true);
+            assert_eq!(result, super::litecov::RunResult::OK);
+
+            // Check if it contains address to if c == 'a' branch. Sometimes it gets address to memset function.
+            assert_eq!(coverage.contains(&4174), true);
         }
     }
     #[test]

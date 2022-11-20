@@ -36,7 +36,7 @@ public:
   void CleanTarget() override;
 
   bool HasNewCoverage() override;
-  void GetCoverage(rust::Vec<uint64_t> &coverage, bool clear_coverage) override;
+  void GetCoverage(Coverage &coverage, rust::Vec<uint64_t> &afl_coverage, bool clear_coverage) override;
   void ClearCoverage() override;
   void IgnoreCoverage(Coverage &coverage) override;
 

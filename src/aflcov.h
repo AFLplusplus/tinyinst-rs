@@ -6,5 +6,5 @@
 class AFLCov : public LiteCov
 {
 public:
-    void GetCoverage(rust::Vec<uint64_t> &coverage, bool clear_coverage);
+    void GetCoverage(Coverage &coverage, rust::Vec<uint64_t> &afl_coverage, bool clear_coverage);
 };
