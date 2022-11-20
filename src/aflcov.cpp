@@ -12,7 +12,6 @@ void AFLCov::GetCoverage(Coverage &coverage, rust::Vec<uint64_t> &afl_coverage, 
 
         // check if that module is already in the coverage list
         // (if the client calls with non-empty initial coverage)
-        std::cout << module->module_name << std::endl;
         ModuleCoverage *module_coverage =
             GetModuleCoverage(coverage, module->module_name);
         if (module_coverage)
@@ -22,11 +21,11 @@ void AFLCov::GetCoverage(Coverage &coverage, rust::Vec<uint64_t> &afl_coverage, 
 
             // Copy the coverage to afl_coverage
             std::copy(data->collected_coverage.begin(), data->collected_coverage.end(), std::back_inserter(afl_coverage));
-            // printf("afl_coverage.size() = %d")
         }
         else
         {
             coverage.push_back({module->module_name, data->collected_coverage});
+            // Copy the coverage to afl_coverage
             std::copy(data->collected_coverage.begin(), data->collected_coverage.end(), std::back_inserter(afl_coverage));
         }
     }
