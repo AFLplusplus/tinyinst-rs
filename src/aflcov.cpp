@@ -2,8 +2,6 @@
 #include <iostream>
 void AFLCov::GetCoverage(Coverage &coverage, rust::Vec<uint64_t> &afl_coverage, bool clear_coverage)
 {
-    std::cout << "\nGetCoverage\n"
-              << std::endl;
     CollectCoverage();
     for (ModuleInfo *module : instrumented_modules)
     {
