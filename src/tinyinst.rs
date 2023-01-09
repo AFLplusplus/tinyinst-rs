@@ -1,20 +1,23 @@
-use std::{
-    ffi::{c_char, CString},
-    path::Path,
+use alloc::{ffi::CString, string::String, vec::Vec};
+use core::{
+    ffi::c_char,
+    fmt::{self, Debug, Formatter},
 };
 #[cxx::bridge]
 pub mod common {
     // C++ types and signatures exposed to Rust.
     unsafe extern "C++" {
         include!("common.h");
+        #[must_use]
         fn GetCurTime() -> u64;
     }
 }
 
+#[allow(clippy::expl_impl_clone_on_copy)]
 #[cxx::bridge]
 pub mod litecov {
+    #[derive(Debug, Copy, Clone)]
     #[repr(u32)]
-    #[derive(Debug)]
     enum RunResult {
         OK,
         CRASH,
@@ -22,6 +25,7 @@ pub mod litecov {
         OTHER_ERROR,
     }
 
+    #[allow(missing_debug_implementations)]
     unsafe extern "C++" {
         // for constructors.
         include!("shim.h");
@@ -35,6 +39,7 @@ pub mod litecov {
         type Coverage;
         type ModuleCoverage;
 
+        #[must_use]
         pub fn coverage_new() -> UniquePtr<Coverage>;
 
         pub unsafe fn get_coverage_map(
@@ -45,15 +50,18 @@ pub mod litecov {
 
         // TinyinstInstrumentation
         type TinyInstInstrumentation;
+        #[must_use]
         pub fn tinyinstinstrumentation_new() -> UniquePtr<TinyInstInstrumentation>;
 
         type RunResult;
         // type Coverage;
+        #[allow(clippy::similar_names)]
         pub unsafe fn Init(
             self: Pin<&mut TinyInstInstrumentation>,
             argc: i32,
             argv: *mut *mut c_char,
         );
+        #[allow(clippy::similar_names)]
         pub unsafe fn Run(
             self: Pin<&mut TinyInstInstrumentation>,
             argc: i32,
@@ -62,6 +70,7 @@ pub mod litecov {
             timeout: u32,
         ) -> RunResult;
 
+        #[allow(clippy::similar_names)]
         pub unsafe fn RunWithCrashAnalysis(
             self: Pin<&mut TinyInstInstrumentation>,
             argc: i32,
@@ -71,6 +80,7 @@ pub mod litecov {
         ) -> RunResult;
 
         pub fn CleanTarget(self: Pin<&mut TinyInstInstrumentation>);
+        #[must_use]
         pub fn HasNewCoverage(self: Pin<&mut TinyInstInstrumentation>) -> bool;
 
         pub fn GetCoverage(
@@ -94,12 +104,14 @@ pub mod litecov {
 
 use cxx::UniquePtr;
 impl litecov::TinyInstInstrumentation {
+    #[must_use]
     pub fn new() -> UniquePtr<litecov::TinyInstInstrumentation> {
         litecov::tinyinstinstrumentation_new()
     }
 }
 
 impl litecov::Coverage {
+    #[must_use]
     pub fn new() -> UniquePtr<litecov::Coverage> {
         litecov::coverage_new()
     }
@@ -112,15 +124,25 @@ pub struct TinyInst {
     timeout: u32,
 }
 
+impl Debug for TinyInst {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("TinyInst")
+            .field("program_args", &self.program_args)
+            .field("timeout", &self.timeout)
+            .finish_non_exhaustive()
+    }
+}
+
 impl TinyInst {
-    pub unsafe fn new(
-        tinyinst_args: Vec<String>,
-        program_args: Vec<String>,
-        timeout: u32,
-    ) -> TinyInst {
+    #[must_use]
+    pub unsafe fn new(tinyinst_args: &[String], program_args: &[String], timeout: u32) -> TinyInst {
+        // commented out by domenukk:
+        // a) would require call to a libc, c++ or rust std fn
+        // b) The program could actually be in the PATH, so, not accessible as file.
+        /*
         if !Path::new(format!("{}", program_args[0]).as_str()).exists() {
             panic!("{} does not exist", program_args[0]);
-        }
+        }*/
         let mut tinyinst_ptr = litecov::TinyInstInstrumentation::new();
 
         let tinyinst_args_cstr: Vec<CString> = tinyinst_args
@@ -132,16 +154,17 @@ impl TinyInst {
             .iter()
             .map(|arg| arg.as_ptr() as *mut c_char)
             .collect();
-        tinyinst_args_ptr.push(std::ptr::null_mut());
+        tinyinst_args_ptr.push(core::ptr::null_mut());
 
         // Init TinyInst with Tinyinst arguments.
-        tinyinst_ptr
-            .pin_mut()
-            .Init(tinyinst_args.len() as i32, tinyinst_args_ptr.as_mut_ptr());
+        tinyinst_ptr.pin_mut().Init(
+            i32::try_from(tinyinst_args.len()).unwrap(),
+            tinyinst_args_ptr.as_mut_ptr(),
+        );
 
         TinyInst {
             tinyinst_ptr,
-            program_args,
+            program_args: program_args.to_vec(),
             timeout,
             coverage_ptr: litecov::Coverage::new(),
         }
@@ -158,9 +181,9 @@ impl TinyInst {
             .iter()
             .map(|arg| arg.as_ptr() as *mut c_char)
             .collect();
-        program_args_ptr.push(std::ptr::null_mut());
+        program_args_ptr.push(core::ptr::null_mut());
         self.tinyinst_ptr.pin_mut().Run(
-            self.program_args.len() as i32,
+            i32::try_from(self.program_args.len()).unwrap(),
             program_args_ptr.as_mut_ptr(),
             self.timeout,
             self.timeout,
@@ -199,8 +222,12 @@ impl TinyInst {
 
 #[cfg(test)]
 mod tests {
-    use std::fs::File;
-    use std::io::{Seek, Write};
+    use alloc::vec::Vec;
+    use std::{
+        fs::File,
+        io::{Seek, Write},
+        string::ToString,
+    };
     #[test]
     fn tinyinst_ok() {
         let tinyinst_args = vec!["-instrument_module".to_string(), "test.exe".to_string()];
@@ -215,37 +242,39 @@ mod tests {
         let mut coverage = Vec::new();
 
         unsafe {
-            let mut tinyinst = super::TinyInst::new(tinyinst_args, program_args, 5000);
+            let mut tinyinst = super::TinyInst::new(&tinyinst_args, &program_args, 5000);
 
             // First test case
             let result = tinyinst.run();
             tinyinst.vec_coverage(&mut coverage, true);
             assert_eq!(result, super::litecov::RunResult::OK);
-            assert_eq!(coverage.len() <= 1412, true);
+            assert!(coverage.len() <= 1412);
 
             // Second test case for b
-            file.seek(std::io::SeekFrom::Start(0)).unwrap();
+            _ = file.seek(std::io::SeekFrom::Start(0)).unwrap();
             file.write_all(b"b").unwrap();
             let result = tinyinst.run();
             tinyinst.vec_coverage(&mut coverage, true);
             assert_eq!(result, super::litecov::RunResult::OK);
 
             // Check if it contains address to if c == 'b' branch. Sometimes it gets address to memset function. Weird windows crap probably?
-            assert_eq!(coverage.contains(&4151), true);
+            assert!(coverage.contains(&4151));
 
             // Second test case for ba
-            file.seek(std::io::SeekFrom::Start(0)).unwrap();
+            _ = file.seek(std::io::SeekFrom::Start(0)).unwrap();
             file.write_all(b"ba").unwrap();
             let result = tinyinst.run();
             tinyinst.vec_coverage(&mut coverage, true);
             assert_eq!(result, super::litecov::RunResult::OK);
 
             // Check if it contains address to if c == 'a' branch. Sometimes it gets address to memset function.
-            assert_eq!(coverage.contains(&4174), true);
+            assert!(coverage.contains(&4174));
         }
     }
     #[test]
     fn tinyinst_crash() {
+        use alloc::{string::ToString, vec::Vec};
+
         let tinyinst_args = vec!["-instrument_module".to_string(), "test.exe".to_string()];
 
         let program_args = vec![
@@ -255,7 +284,7 @@ mod tests {
         let mut coverage = Vec::new();
 
         unsafe {
-            let mut tinyinst = super::TinyInst::new(tinyinst_args, program_args, 5000);
+            let mut tinyinst = super::TinyInst::new(&tinyinst_args, &program_args, 5000);
             let result = tinyinst.run();
             tinyinst.vec_coverage(&mut coverage, true);
             assert_eq!(result, super::litecov::RunResult::CRASH);

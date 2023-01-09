@@ -19,28 +19,29 @@ fn main() {
     println!("cargo:warning=Generating Bridge files.");
     // Get tinyinst from git
     Command::new("cmd")
-        .args(&["/C", format!("{}/build.bat", &cwd).as_str()])
+        .arg("/C")
+        .arg(format!("{cwd}/build.bat"))
         .status()
         .unwrap();
 
     // source
     Command::new("cxxbridge")
-        .args(&["src/tinyinst.rs", "-o"])
-        .arg(&format!("{}/bridge.cc", &tinyinst))
+        .args(["src/tinyinst.rs", "-o"])
+        .arg(format!("{tinyinst}/bridge.cc"))
         .status()
         .unwrap();
 
     // header
     Command::new("cxxbridge")
-        .args(&["src/tinyinst.rs", "--header", "-o"])
-        .arg(&format!("{}/bridge.h", &tinyinst))
+        .args(["src/tinyinst.rs", "--header", "-o"])
+        .arg(format!("{tinyinst}/bridge.h"))
         .status()
         .unwrap();
 
     // cxx
     Command::new("cxxbridge")
-        .args(&["--header", "-o"])
-        .arg(&format!("{}/cxx.h", &tinyinst))
+        .args(["--header", "-o"])
+        .arg(format!("{tinyinst}/cxx.h"))
         .status()
         .unwrap();
 
