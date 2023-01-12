@@ -119,7 +119,8 @@ impl litecov::Coverage {
 
 pub struct TinyInst {
     tinyinst_ptr: UniquePtr<litecov::TinyInstInstrumentation>,
-    program_args: Vec<String>,
+    program_args_cstr: Vec<CString>,
+    program_args_ptr: Vec<*mut c_char>,
     coverage_ptr: UniquePtr<litecov::Coverage>,
     timeout: u32,
 }
@@ -127,7 +128,7 @@ pub struct TinyInst {
 impl Debug for TinyInst {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("TinyInst")
-            .field("program_args", &self.program_args)
+            .field("program_args_cstr", &self.program_args_cstr)
             .field("timeout", &self.timeout)
             .finish_non_exhaustive()
     }
@@ -162,17 +163,7 @@ impl TinyInst {
             tinyinst_args_ptr.as_mut_ptr(),
         );
 
-        TinyInst {
-            tinyinst_ptr,
-            program_args: program_args.to_vec(),
-            timeout,
-            coverage_ptr: litecov::Coverage::new(),
-        }
-    }
-
-    pub unsafe fn run(&mut self) -> litecov::RunResult {
-        let program_args_cstr: Vec<CString> = self
-            .program_args
+        let program_args_cstr: Vec<CString> = program_args
             .iter()
             .map(|arg| CString::new(arg.as_str()).unwrap())
             .collect();
@@ -182,9 +173,20 @@ impl TinyInst {
             .map(|arg| arg.as_ptr() as *mut c_char)
             .collect();
         program_args_ptr.push(core::ptr::null_mut());
+
+        TinyInst {
+            tinyinst_ptr,
+            program_args_cstr,
+            program_args_ptr,
+            timeout,
+            coverage_ptr: litecov::Coverage::new(),
+        }
+    }
+
+    pub unsafe fn run(&mut self) -> litecov::RunResult {
         self.tinyinst_ptr.pin_mut().Run(
-            i32::try_from(self.program_args.len()).unwrap(),
-            program_args_ptr.as_mut_ptr(),
+            i32::try_from(self.program_args_cstr.len()).unwrap(),
+            self.program_args_ptr.as_mut_ptr(),
             self.timeout,
             self.timeout,
         )
