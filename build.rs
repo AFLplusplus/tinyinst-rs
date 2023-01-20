@@ -1,10 +1,22 @@
 use std::{
-    env,
+    env, fs,
+    path::Path,
     process::{exit, Command},
 };
 
 use cmake::Config;
+use git2::{Oid, Repository};
+use which::which;
 
+const TINYINST_URL: &str = "https://github.com/googleprojectzero/TinyInst.git";
+const TINYINST_DIRNAME: &str = "Tinyinst";
+const TINYINST_REVISION: &str = "cfb9b15a53e5e6489f2f72c77e804fb0a7af94b5";
+
+fn build_dep_check(tools: &[&str]) {
+    for tool in tools {
+        which(tool).unwrap_or_else(|_| panic!("Build tool {tool} not found"));
+    }
+}
 fn main() {
     // First we generate .cc and .h files from ffi.rs
     if !cfg!(windows) {
@@ -12,83 +24,95 @@ fn main() {
         exit(0);
     }
 
-    let cwd = env::current_dir().unwrap().to_string_lossy().to_string();
-    let tinyinst = format!("{}/TinyInst", &cwd);
-    println!("cargo:warning=Pulling TinyInst from github");
+    build_dep_check(&["git", "python", "cxxbridge"]);
 
-    println!("cargo:warning=Generating Bridge files.");
-    // Get tinyinst from git
-    Command::new("cmd")
-        .arg("/C")
-        .arg(format!("{cwd}/build.bat"))
-        .status()
-        .unwrap();
+    let custum_tinyinst_dir =
+        env::var_os("CUSTOM_TINYINST_DIR").map(|x| x.to_string_lossy().to_string());
+    let custum_tinyinst_no_build = env::var("CUSTOM_TINYINST_NO_BUILD").is_ok();
 
-    // source
-    Command::new("cxxbridge")
-        .args(["src/tinyinst.rs", "-o"])
-        .arg(format!("{tinyinst}/bridge.cc"))
-        .status()
-        .unwrap();
+    println!("cargo:rerun-if-env-changed=CUSTOM_TINYINST_DIR");
+    println!("cargo:rerun-if-env-changed=CUSTOM_TINYINST_NO_BUILD");
 
-    // header
-    Command::new("cxxbridge")
-        .args(["src/tinyinst.rs", "--header", "-o"])
-        .arg(format!("{tinyinst}/bridge.h"))
-        .status()
-        .unwrap();
+    let out_dir = env::var_os("OUT_DIR").unwrap();
+    let out_dir_path = Path::new(&out_dir);
+    let mut target_dir = out_dir_path.to_path_buf();
+    target_dir.pop();
+    target_dir.pop();
+    target_dir.pop();
 
-    // cxx
-    Command::new("cxxbridge")
-        .args(["--header", "-o"])
-        .arg(format!("{tinyinst}/cxx.h"))
-        .status()
-        .unwrap();
+    let tinyinst_path = if let Some(tinyinst_dir) = custum_tinyinst_dir.as_ref() {
+        Path::new(&tinyinst_dir).to_path_buf()
+    } else {
+        let tinyinst_path = out_dir_path.join(TINYINST_DIRNAME);
+        let tinyinst_rev = target_dir.join("TINYINST_REVISION");
+        // if revision exists and its different, remove Tinyinst dir
+        if tinyinst_rev.exists()
+            && fs::read_to_string(&tinyinst_rev).expect("Failed to read TINYINST_REVISION")
+                != TINYINST_REVISION
+        {
+            println!("cargo:warning=Removing Tinyinst dir. Revision changed");
+            let _ = fs::remove_dir_all(&tinyinst_path);
+        }
 
-    // shim
-    std::fs::copy("./src/shim.cc", "./Tinyinst/shim.cc").unwrap();
-    std::fs::copy("./src/shim.h", "./Tinyinst/shim.h").unwrap();
+        // Check if directory doesn't exist, clone
+        if !tinyinst_path.is_dir() {
+            println!("cargo:warning=Pulling TinyInst from github");
+            let tinyinst_repo = match Repository::clone(TINYINST_URL, &tinyinst_path) {
+                Ok(repo) => repo,
+                _ => Repository::open(&tinyinst_path).expect("Failed to open repository"),
+            };
 
-    // runresult
-    std::fs::copy("./src/runresult.h", "./Tinyinst/runresult.h").unwrap();
+            // checkout correct commit
+            let oid = Oid::from_str(TINYINST_REVISION).unwrap();
+            let commit = tinyinst_repo.find_commit(oid).unwrap();
 
-    // instrumentation
-    std::fs::copy(
-        "./src/instrumentation.cpp",
-        "./Tinyinst/instrumentation.cpp",
-    )
-    .unwrap();
-    std::fs::copy("./src/instrumentation.h", "./Tinyinst/instrumentation.h").unwrap();
+            let _ = tinyinst_repo.branch(TINYINST_REVISION, &commit, false);
+            let obj = tinyinst_repo
+                .revparse_single(&("refs/heads/".to_owned() + TINYINST_REVISION))
+                .unwrap();
 
-    // tinyinstinstrumentation
-    std::fs::copy(
-        "./src/tinyinstinstrumentation.cpp",
-        "./Tinyinst/tinyinstinstrumentation.cpp",
-    )
-    .unwrap();
-    std::fs::copy(
-        "./src/tinyinstinstrumentation.h",
-        "./Tinyinst/tinyinstinstrumentation.h",
-    )
-    .unwrap();
+            tinyinst_repo.checkout_tree(&obj, None).unwrap();
 
-    // aflcov
-    std::fs::copy("./src/aflcov.cpp", "./Tinyinst/aflcov.cpp").unwrap();
-    std::fs::copy("./src/aflcov.h", "./Tinyinst/aflcov.h").unwrap();
+            tinyinst_repo
+                .set_head(&("refs/heads/".to_owned() + TINYINST_REVISION))
+                .unwrap();
 
-    let dst = Config::new("TinyInst")
-        .generator("Visual Studio 17 2022") // make this configurable from env variable
-        .build_target("tinyinst")
-        .profile("Release") // without this, it goes into RelWithDbInfo folder??
-        .build();
+            let mut submodules = tinyinst_repo.submodules().unwrap();
 
-    println!("cargo:warning={}", dst.display());
-    println!("cargo:rustc-link-search={}\\build\\Release", dst.display()); // debug build?
+            // do git submodule --init --recursive on Tinyinst
+            for submodule in &mut submodules {
+                submodule.update(true, None).unwrap();
+            }
+
+            // write the revision to target dir
+            fs::write(&tinyinst_rev, TINYINST_REVISION).unwrap();
+        }
+        tinyinst_path
+    };
+
+    if !custum_tinyinst_no_build {
+        println!(
+            "cargo:warning=Generating Bridge files. and building for {}",
+            &tinyinst_path.to_string_lossy()
+        );
+        copy_tinyinst_files(&tinyinst_path);
+
+        let _ = Config::new(&tinyinst_path)
+            .generator("Visual Studio 17 2022") // make this configurable from env variable
+            .build_target("tinyinst")
+            .profile("Release") // without this, it goes into RelWithDbInfo folder??
+            .out_dir(&tinyinst_path)
+            .build();
+    }
+
+    println!(
+        "cargo:rustc-link-search={}\\build\\Release",
+        &tinyinst_path.to_string_lossy()
+    );
     println!(
         "cargo:rustc-link-search={}\\build\\third_party\\obj\\wkit\\lib",
-        dst.display()
-    ); //xed
-
+        &tinyinst_path.to_string_lossy()
+    );
     println!("cargo:rustc-link-lib=static=tinyinst");
     println!("cargo:rustc-link-lib=static=xed");
     println!("cargo:rustc-link-lib=dylib=dbghelp");
@@ -97,4 +121,65 @@ fn main() {
     println!("cargo:rerun-if-changed=src/tinyinst.rs");
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=Tinyinst/litecov.cpp");
+}
+
+fn copy_tinyinst_files(tinyinst_path: &Path) {
+    // source
+    Command::new("cxxbridge")
+        .args(["src/tinyinst.rs", "-o"])
+        .arg(format!("{}/bridge.cc", tinyinst_path.to_string_lossy()))
+        .status()
+        .unwrap();
+
+    // header
+    Command::new("cxxbridge")
+        .args(["src/tinyinst.rs", "--header", "-o"])
+        .arg(format!("{}/bridge.h", tinyinst_path.to_string_lossy()))
+        .status()
+        .unwrap();
+
+    // cxx
+    Command::new("cxxbridge")
+        .args(["--header", "-o"])
+        .arg(format!("{}/cxx.h", tinyinst_path.to_string_lossy()))
+        .status()
+        .unwrap();
+
+    // shim
+    std::fs::copy("./src/shim.cc", tinyinst_path.join("shim.cc")).unwrap();
+    std::fs::copy("./src/shim.h", tinyinst_path.join("shim.h")).unwrap();
+
+    // runresult
+    std::fs::copy("./src/runresult.h", tinyinst_path.join("runresult.h")).unwrap();
+
+    // instrumentation
+    std::fs::copy(
+        "./src/instrumentation.cpp",
+        tinyinst_path.join("instrumentation.cpp"),
+    )
+    .unwrap();
+    std::fs::copy(
+        "./src/instrumentation.h",
+        tinyinst_path.join("instrumentation.h"),
+    )
+    .unwrap();
+
+    // tinyinstinstrumentation
+    std::fs::copy(
+        "./src/tinyinstinstrumentation.cpp",
+        tinyinst_path.join("tinyinstinstrumentation.cpp"),
+    )
+    .unwrap();
+    std::fs::copy(
+        "./src/tinyinstinstrumentation.h",
+        tinyinst_path.join("tinyinstinstrumentation.h"),
+    )
+    .unwrap();
+
+    // aflcov
+    std::fs::copy("./src/aflcov.cpp", tinyinst_path.join("aflcov.cpp")).unwrap();
+    std::fs::copy("./src/aflcov.h", tinyinst_path.join("aflcov.h")).unwrap();
+
+    // cmake file
+    std::fs::copy("./src/CMakeLists.txt", tinyinst_path.join("CMakeLists.txt")).unwrap();
 }

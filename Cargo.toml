@@ -15,3 +15,5 @@ cxx = { version = "1.0", default-features = false, features = ["alloc"] }
 
 [build-dependencies]
 cmake = "0.1"
+git2 = "0.16.0"
+which = "4.3.0"
