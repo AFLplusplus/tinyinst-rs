@@ -12,7 +12,9 @@ FFI to [TinyInst](https://github.com/googleprojectzero/TinyInst). Created for [L
 ## Optional ENV Variables
 
 `CUSTOM_TINYINST_GENERATOR` = Generator used for cmake `-G` flag
+
 `CUSTOM_TINYINST_PATH` = path to local Tinyinst repo
+
 `CUSTOM_TINYINST_NO_BUILD` = if set, it won't build Tinyinst everytime. Useful when paired with `CUSTOM_TINYINST_PATH`
 
 
