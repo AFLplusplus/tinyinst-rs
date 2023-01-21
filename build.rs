@@ -95,7 +95,7 @@ fn main() {
 
             let mut submodules = tinyinst_repo.submodules().unwrap();
 
-            // do git submodule --init --recursive on Tinyinst
+            // do git submodule update --init --recursive on Tinyinst
             for submodule in &mut submodules {
                 submodule.update(true, None).unwrap();
             }
