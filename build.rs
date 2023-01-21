@@ -98,7 +98,6 @@ fn main() {
         copy_tinyinst_files(&tinyinst_path);
 
         let _ = Config::new(&tinyinst_path)
-            .generator("Visual Studio 17 2022") // make this configurable from env variable
             .build_target("tinyinst")
             .profile("Release") // without this, it goes into RelWithDbInfo folder??
             .out_dir(&tinyinst_path)

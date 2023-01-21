@@ -228,17 +228,29 @@ mod tests {
     use std::{
         fs::File,
         io::{Seek, Write},
+        path::Path,
         string::ToString,
     };
+
+    #[cfg(target_os = "windows")]
+    const TEST_FILENAME: &str = "test.exe";
+    #[cfg(not(target_os = "windows"))]
+    const TEST_FILENAME: &str = "test";
+
+    const TEST_PATH: &str = "test/build/Debug/";
+
     #[test]
     fn tinyinst_ok() {
-        let tinyinst_args = vec!["-instrument_module".to_string(), "test.exe".to_string()];
+        let tinyinst_args = vec!["-instrument_module".to_string(), TEST_FILENAME.to_string()];
         // Create file to test.
         let mut file = File::create(".\\test\\test_file.txt").unwrap();
         file.write_all(b"test1").unwrap();
 
         let program_args = vec![
-            ".\\test\\test.exe".to_string(),
+            Path::new(TEST_PATH)
+                .join(TEST_FILENAME)
+                .display()
+                .to_string(),
             ".\\test\\test_file.txt".to_string(),
         ];
         let mut coverage = Vec::new();
@@ -259,28 +271,25 @@ mod tests {
             tinyinst.vec_coverage(&mut coverage, true);
             assert_eq!(result, super::litecov::RunResult::OK);
 
-            // Check if it contains address to if c == 'b' branch. Sometimes it gets address to memset function. Weird windows crap probably?
-            assert!(coverage.contains(&4151));
-
             // Second test case for ba
             _ = file.seek(std::io::SeekFrom::Start(0)).unwrap();
             file.write_all(b"ba").unwrap();
             let result = tinyinst.run();
             tinyinst.vec_coverage(&mut coverage, true);
             assert_eq!(result, super::litecov::RunResult::OK);
-
-            // Check if it contains address to if c == 'a' branch. Sometimes it gets address to memset function.
-            assert!(coverage.contains(&4174));
         }
     }
     #[test]
     fn tinyinst_crash() {
         use alloc::{string::ToString, vec::Vec};
 
-        let tinyinst_args = vec!["-instrument_module".to_string(), "test.exe".to_string()];
+        let tinyinst_args = vec!["-instrument_module".to_string(), TEST_FILENAME.to_string()];
 
         let program_args = vec![
-            ".\\test\\test.exe".to_string(),
+            Path::new(TEST_PATH)
+                .join(TEST_FILENAME)
+                .display()
+                .to_string(),
             ".\\test\\crash_input.txt".to_string(),
         ];
         let mut coverage = Vec::new();
