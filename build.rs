@@ -18,18 +18,17 @@ fn build_dep_check(tools: &[&str]) {
     }
 }
 fn main() {
-    // First we generate .cc and .h files from ffi.rs
     if cfg!(linux) {
         println!("cargo:warning=Tinyinst doesn't support linux");
         exit(0);
     }
 
-    build_dep_check(&["git", "python", "cxxbridge"]);
+    build_dep_check(&["git", "cxxbridge"]);
 
-    #[cfg(windows)]
+    #[cfg(target_os = "windows")]
     let cmake_generator = "Visual Studio 17 2022";
-    #[cfg(macos)]
-    let cmake_generator = "xcode";
+    #[cfg(target_os = "macos")]
+    let cmake_generator = "Xcode";
 
     let custom_tinyinst_generator =
         env::var_os("CUSTOM_TINYINST_GENERATOR").map(|x| x.to_string_lossy().to_string());
@@ -120,15 +119,17 @@ fn main() {
     }
 
     println!(
-        "cargo:rustc-link-search={}\\build\\Release",
+        "cargo:rustc-link-search={}/build/Release",
         &tinyinst_path.to_string_lossy()
     );
     println!(
-        "cargo:rustc-link-search={}\\build\\third_party\\obj\\wkit\\lib",
+        "cargo:rustc-link-search={}/build/third_party/obj/wkit/lib",
         &tinyinst_path.to_string_lossy()
     );
     println!("cargo:rustc-link-lib=static=tinyinst");
     println!("cargo:rustc-link-lib=static=xed");
+
+    #[cfg(target_os = "windows")]
     println!("cargo:rustc-link-lib=dylib=dbghelp");
 
     println!("cargo:rerun-if-changed=src/");

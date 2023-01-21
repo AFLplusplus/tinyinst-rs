@@ -234,16 +234,19 @@ mod tests {
 
     #[cfg(target_os = "windows")]
     const TEST_FILENAME: &str = "test.exe";
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(target_os = "macos")]
     const TEST_FILENAME: &str = "test";
 
+    #[cfg(target_os = "macos")]
+    const TEST_PATH: &str = "test/build/";
+    #[cfg(target_os = "windows")]
     const TEST_PATH: &str = "test/build/Debug/";
 
     #[test]
     fn tinyinst_ok() {
         let tinyinst_args = vec!["-instrument_module".to_string(), TEST_FILENAME.to_string()];
         // Create file to test.
-        let mut file = File::create(".\\test\\test_file.txt").unwrap();
+        let mut file = File::create("./test/test_file.txt").unwrap();
         file.write_all(b"test1").unwrap();
 
         let program_args = vec![
@@ -251,7 +254,7 @@ mod tests {
                 .join(TEST_FILENAME)
                 .display()
                 .to_string(),
-            ".\\test\\test_file.txt".to_string(),
+            "./test/test_file.txt".to_string(),
         ];
         let mut coverage = Vec::new();
 
@@ -290,7 +293,7 @@ mod tests {
                 .join(TEST_FILENAME)
                 .display()
                 .to_string(),
-            ".\\test\\crash_input.txt".to_string(),
+            "./test/crash_input.txt".to_string(),
         ];
         let mut coverage = Vec::new();
 
@@ -299,7 +302,6 @@ mod tests {
             let result = tinyinst.run();
             tinyinst.vec_coverage(&mut coverage, true);
             assert_eq!(result, super::litecov::RunResult::CRASH);
-            // assert_eq!(bitmap.iter().filter(|&x| *x == 1).count(), 1307);
         }
     }
 }

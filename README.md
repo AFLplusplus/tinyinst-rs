@@ -2,6 +2,13 @@
 
 FFI to [TinyInst](https://github.com/googleprojectzero/TinyInst). Created for [LibAFL](https://github.com/AFLplusplus/LibAFL).
 
+## Dependencies
+
+* cxxbridge
+* cargo-make
+* python3
+* git
+
 ## Running the test
 
 1. Open a terminal and set up your build environment (e.g. On Windows, run Developer Powershell / Developer CMD/ vcvars64.bat / vcvars32.bat)
