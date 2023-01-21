@@ -19,12 +19,26 @@ fn build_dep_check(tools: &[&str]) {
 }
 fn main() {
     // First we generate .cc and .h files from ffi.rs
-    if !cfg!(windows) {
-        println!("cargo:warning=No MacOS support yet.");
+    if cfg!(linux) {
+        println!("cargo:warning=Tinyinst doesn't support linux");
         exit(0);
     }
 
     build_dep_check(&["git", "python", "cxxbridge"]);
+
+    #[cfg(windows)]
+    let cmake_generator = "Visual Studio 17 2022";
+    #[cfg(macos)]
+    let cmake_generator = "xcode";
+
+    let custom_tinyinst_generator =
+        env::var_os("CUSTOM_TINYINST_GENERATOR").map(|x| x.to_string_lossy().to_string());
+
+    let tinyinst_generator = if let Some(generator) = custom_tinyinst_generator.as_ref() {
+        generator
+    } else {
+        cmake_generator
+    };
 
     let custum_tinyinst_dir =
         env::var_os("CUSTOM_TINYINST_DIR").map(|x| x.to_string_lossy().to_string());
@@ -32,6 +46,7 @@ fn main() {
 
     println!("cargo:rerun-if-env-changed=CUSTOM_TINYINST_DIR");
     println!("cargo:rerun-if-env-changed=CUSTOM_TINYINST_NO_BUILD");
+    println!("cargo:rerun-if-env-changed=CUSTOM_TINYINST_GENERATOR");
 
     let out_dir = env::var_os("OUT_DIR").unwrap();
     let out_dir_path = Path::new(&out_dir);
@@ -89,7 +104,6 @@ fn main() {
         }
         tinyinst_path
     };
-
     if !custum_tinyinst_no_build {
         println!(
             "cargo:warning=Generating Bridge files. and building for {}",
@@ -98,6 +112,7 @@ fn main() {
         copy_tinyinst_files(&tinyinst_path);
 
         let _ = Config::new(&tinyinst_path)
+            .generator(tinyinst_generator)
             .build_target("tinyinst")
             .profile("Release") // without this, it goes into RelWithDbInfo folder??
             .out_dir(&tinyinst_path)
