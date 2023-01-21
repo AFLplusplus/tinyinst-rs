@@ -1,3 +1,10 @@
 [tasks.build_test]
-command = "cl"
-args = ["./test/test.c", "-o", "./test/test.exe"]
+dependencies = ["build_configure"]
+cwd = "./test"
+command = "cmake"
+args = ["--build", "build", "--config", "Debug"]
+
+[tasks.build_configure]
+cwd = "./test"
+command = "cmake"
+args = ["-S", ".", "-B", "build"]
