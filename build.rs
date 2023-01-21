@@ -120,6 +120,12 @@ fn main() {
             .build();
     }
 
+    // For m1 mac(?)
+    println!(
+        "cargo:rustc-link-search={}/build/third_party/Release",
+        &tinyinst_path.to_string_lossy()
+    );
+
     println!(
         "cargo:rustc-link-search={}/build/Release",
         &tinyinst_path.to_string_lossy()
@@ -129,7 +135,12 @@ fn main() {
         &tinyinst_path.to_string_lossy()
     );
     println!("cargo:rustc-link-lib=static=tinyinst");
+
+    #[cfg(target_arch = "x86_64")]
     println!("cargo:rustc-link-lib=static=xed");
+
+    #[cfg(target_arch = "aarch64")]
+    println!("cargo:rustc-link-lib=static=reil");
 
     #[cfg(target_os = "windows")]
     println!("cargo:rustc-link-lib=dylib=dbghelp");
