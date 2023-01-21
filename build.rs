@@ -33,6 +33,8 @@ fn main() {
     let custom_tinyinst_generator =
         env::var_os("CUSTOM_TINYINST_GENERATOR").map(|x| x.to_string_lossy().to_string());
 
+    env::set_var("CXXFLAGS", "-std=c++17");
+
     let tinyinst_generator = if let Some(generator) = custom_tinyinst_generator.as_ref() {
         generator
     } else {
