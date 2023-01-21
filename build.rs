@@ -18,16 +18,17 @@ fn build_dep_check(tools: &[&str]) {
     }
 }
 fn main() {
-    if cfg!(linux) {
+    if cfg!(unix) {
         println!("cargo:warning=Tinyinst doesn't support linux");
         exit(0);
     }
+
 
     build_dep_check(&["git", "cxxbridge"]);
 
     #[cfg(target_os = "windows")]
     let cmake_generator = "Visual Studio 17 2022";
-    #[cfg(target_os = "macos")]
+    #[cfg(not(target_os = "windows"))]
     let cmake_generator = "Xcode";
 
     let custom_tinyinst_generator =
