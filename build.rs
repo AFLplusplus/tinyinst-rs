@@ -18,138 +18,137 @@ fn build_dep_check(tools: &[&str]) {
     }
 }
 fn main() {
-    if cfg!(unix) {
+    if cfg!(linux) {
         println!("cargo:warning=Tinyinst doesn't support linux");
         exit(0);
-    }
-
-
-    build_dep_check(&["git", "cxxbridge"]);
-
-    #[cfg(target_os = "windows")]
-    let cmake_generator = "Visual Studio 17 2022";
-    #[cfg(not(target_os = "windows"))]
-    let cmake_generator = "Xcode";
-
-    let custom_tinyinst_generator =
-        env::var_os("CUSTOM_TINYINST_GENERATOR").map(|x| x.to_string_lossy().to_string());
-
-    env::set_var("CXXFLAGS", "-std=c++17");
-
-    let tinyinst_generator = if let Some(generator) = custom_tinyinst_generator.as_ref() {
-        generator
     } else {
-        cmake_generator
-    };
+        build_dep_check(&["git", "cxxbridge"]);
 
-    let custum_tinyinst_dir =
-        env::var_os("CUSTOM_TINYINST_DIR").map(|x| x.to_string_lossy().to_string());
-    let custum_tinyinst_no_build = env::var("CUSTOM_TINYINST_NO_BUILD").is_ok();
+        #[cfg(target_os = "windows")]
+        let cmake_generator = "Visual Studio 17 2022";
+        #[cfg(not(target_os = "windows"))]
+        let cmake_generator = "Xcode";
 
-    println!("cargo:rerun-if-env-changed=CUSTOM_TINYINST_DIR");
-    println!("cargo:rerun-if-env-changed=CUSTOM_TINYINST_NO_BUILD");
-    println!("cargo:rerun-if-env-changed=CUSTOM_TINYINST_GENERATOR");
+        let custom_tinyinst_generator =
+            env::var_os("CUSTOM_TINYINST_GENERATOR").map(|x| x.to_string_lossy().to_string());
 
-    let out_dir = env::var_os("OUT_DIR").unwrap();
-    let out_dir_path = Path::new(&out_dir);
-    let mut target_dir = out_dir_path.to_path_buf();
-    target_dir.pop();
-    target_dir.pop();
-    target_dir.pop();
+        env::set_var("CXXFLAGS", "-std=c++17");
 
-    let tinyinst_path = if let Some(tinyinst_dir) = custum_tinyinst_dir.as_ref() {
-        Path::new(&tinyinst_dir).to_path_buf()
-    } else {
-        let tinyinst_path = out_dir_path.join(TINYINST_DIRNAME);
-        let tinyinst_rev = target_dir.join("TINYINST_REVISION");
-        // if revision exists and its different, remove Tinyinst dir
-        if tinyinst_rev.exists()
-            && fs::read_to_string(&tinyinst_rev).expect("Failed to read TINYINST_REVISION")
-                != TINYINST_REVISION
-        {
-            println!("cargo:warning=Removing Tinyinst dir. Revision changed");
-            let _ = fs::remove_dir_all(&tinyinst_path);
-        }
+        let tinyinst_generator = if let Some(generator) = custom_tinyinst_generator.as_ref() {
+            generator
+        } else {
+            cmake_generator
+        };
 
-        // Check if directory doesn't exist, clone
-        if !tinyinst_path.is_dir() {
-            println!("cargo:warning=Pulling TinyInst from github");
-            let tinyinst_repo = match Repository::clone(TINYINST_URL, &tinyinst_path) {
-                Ok(repo) => repo,
-                _ => Repository::open(&tinyinst_path).expect("Failed to open repository"),
-            };
+        let custum_tinyinst_dir =
+            env::var_os("CUSTOM_TINYINST_DIR").map(|x| x.to_string_lossy().to_string());
+        let custum_tinyinst_no_build = env::var("CUSTOM_TINYINST_NO_BUILD").is_ok();
 
-            // checkout correct commit
-            let oid = Oid::from_str(TINYINST_REVISION).unwrap();
-            let commit = tinyinst_repo.find_commit(oid).unwrap();
+        println!("cargo:rerun-if-env-changed=CUSTOM_TINYINST_DIR");
+        println!("cargo:rerun-if-env-changed=CUSTOM_TINYINST_NO_BUILD");
+        println!("cargo:rerun-if-env-changed=CUSTOM_TINYINST_GENERATOR");
 
-            let _ = tinyinst_repo.branch(TINYINST_REVISION, &commit, false);
-            let obj = tinyinst_repo
-                .revparse_single(&("refs/heads/".to_owned() + TINYINST_REVISION))
-                .unwrap();
+        let out_dir = env::var_os("OUT_DIR").unwrap();
+        let out_dir_path = Path::new(&out_dir);
+        let mut target_dir = out_dir_path.to_path_buf();
+        target_dir.pop();
+        target_dir.pop();
+        target_dir.pop();
 
-            tinyinst_repo.checkout_tree(&obj, None).unwrap();
-
-            tinyinst_repo
-                .set_head(&("refs/heads/".to_owned() + TINYINST_REVISION))
-                .unwrap();
-
-            let mut submodules = tinyinst_repo.submodules().unwrap();
-
-            // do git submodule update --init --recursive on Tinyinst
-            for submodule in &mut submodules {
-                submodule.update(true, None).unwrap();
+        let tinyinst_path = if let Some(tinyinst_dir) = custum_tinyinst_dir.as_ref() {
+            Path::new(&tinyinst_dir).to_path_buf()
+        } else {
+            let tinyinst_path = out_dir_path.join(TINYINST_DIRNAME);
+            let tinyinst_rev = target_dir.join("TINYINST_REVISION");
+            // if revision exists and its different, remove Tinyinst dir
+            if tinyinst_rev.exists()
+                && fs::read_to_string(&tinyinst_rev).expect("Failed to read TINYINST_REVISION")
+                    != TINYINST_REVISION
+            {
+                println!("cargo:warning=Removing Tinyinst dir. Revision changed");
+                let _ = fs::remove_dir_all(&tinyinst_path);
             }
 
-            // write the revision to target dir
-            fs::write(&tinyinst_rev, TINYINST_REVISION).unwrap();
+            // Check if directory doesn't exist, clone
+            if !tinyinst_path.is_dir() {
+                println!("cargo:warning=Pulling TinyInst from github");
+                let tinyinst_repo = match Repository::clone(TINYINST_URL, &tinyinst_path) {
+                    Ok(repo) => repo,
+                    _ => Repository::open(&tinyinst_path).expect("Failed to open repository"),
+                };
+
+                // checkout correct commit
+                let oid = Oid::from_str(TINYINST_REVISION).unwrap();
+                let commit = tinyinst_repo.find_commit(oid).unwrap();
+
+                let _ = tinyinst_repo.branch(TINYINST_REVISION, &commit, false);
+                let obj = tinyinst_repo
+                    .revparse_single(&("refs/heads/".to_owned() + TINYINST_REVISION))
+                    .unwrap();
+
+                tinyinst_repo.checkout_tree(&obj, None).unwrap();
+
+                tinyinst_repo
+                    .set_head(&("refs/heads/".to_owned() + TINYINST_REVISION))
+                    .unwrap();
+
+                let mut submodules = tinyinst_repo.submodules().unwrap();
+
+                // do git submodule update --init --recursive on Tinyinst
+                for submodule in &mut submodules {
+                    submodule.update(true, None).unwrap();
+                }
+
+                // write the revision to target dir
+                fs::write(&tinyinst_rev, TINYINST_REVISION).unwrap();
+            }
+            tinyinst_path
+        };
+        if !custum_tinyinst_no_build {
+            println!(
+                "cargo:warning=Generating Bridge files. and building for {}",
+                &tinyinst_path.to_string_lossy()
+            );
+            copy_tinyinst_files(&tinyinst_path);
+
+            let _ = Config::new(&tinyinst_path)
+                .generator(tinyinst_generator)
+                .build_target("tinyinst")
+                .profile("Release") // without this, it goes into RelWithDbInfo folder??
+                .out_dir(&tinyinst_path)
+                .build();
         }
-        tinyinst_path
-    };
-    if !custum_tinyinst_no_build {
+
+        // For m1 mac(?)
         println!(
-            "cargo:warning=Generating Bridge files. and building for {}",
+            "cargo:rustc-link-search={}/build/third_party/Release",
             &tinyinst_path.to_string_lossy()
         );
-        copy_tinyinst_files(&tinyinst_path);
 
-        let _ = Config::new(&tinyinst_path)
-            .generator(tinyinst_generator)
-            .build_target("tinyinst")
-            .profile("Release") // without this, it goes into RelWithDbInfo folder??
-            .out_dir(&tinyinst_path)
-            .build();
+        println!(
+            "cargo:rustc-link-search={}/build/Release",
+            &tinyinst_path.to_string_lossy()
+        );
+        println!(
+            "cargo:rustc-link-search={}/build/third_party/obj/wkit/lib",
+            &tinyinst_path.to_string_lossy()
+        );
+        println!("cargo:rustc-link-lib=static=tinyinst");
+
+        #[cfg(target_arch = "x86_64")]
+        println!("cargo:rustc-link-lib=static=xed");
+
+        #[cfg(target_arch = "aarch64")]
+        println!("cargo:rustc-link-lib=static=reil");
+
+        #[cfg(target_os = "windows")]
+        println!("cargo:rustc-link-lib=dylib=dbghelp");
+
+        println!("cargo:rerun-if-changed=src/");
+        println!("cargo:rerun-if-changed=src/tinyinst.rs");
+        println!("cargo:rerun-if-changed=build.rs");
+        println!("cargo:rerun-if-changed=Tinyinst/litecov.cpp");
     }
-
-    // For m1 mac(?)
-    println!(
-        "cargo:rustc-link-search={}/build/third_party/Release",
-        &tinyinst_path.to_string_lossy()
-    );
-
-    println!(
-        "cargo:rustc-link-search={}/build/Release",
-        &tinyinst_path.to_string_lossy()
-    );
-    println!(
-        "cargo:rustc-link-search={}/build/third_party/obj/wkit/lib",
-        &tinyinst_path.to_string_lossy()
-    );
-    println!("cargo:rustc-link-lib=static=tinyinst");
-
-    #[cfg(target_arch = "x86_64")]
-    println!("cargo:rustc-link-lib=static=xed");
-
-    #[cfg(target_arch = "aarch64")]
-    println!("cargo:rustc-link-lib=static=reil");
-
-    #[cfg(target_os = "windows")]
-    println!("cargo:rustc-link-lib=dylib=dbghelp");
-
-    println!("cargo:rerun-if-changed=src/");
-    println!("cargo:rerun-if-changed=src/tinyinst.rs");
-    println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-changed=Tinyinst/litecov.cpp");
 }
 
 fn copy_tinyinst_files(tinyinst_path: &Path) {
