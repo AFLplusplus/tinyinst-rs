@@ -26,7 +26,7 @@ fn main() {
 
         #[cfg(target_os = "windows")]
         let cmake_generator = "Visual Studio 17 2022";
-        #[cfg(not(target_os = "windows"))]
+        #[cfg(target_vendor = "apple")]
         let cmake_generator = "Xcode";
 
         let custom_tinyinst_generator =
