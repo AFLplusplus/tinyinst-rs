@@ -25,7 +25,6 @@ fn build_dep_check(tools: &[&str]) -> bool {
         if found.is_err() {
             println!("cargo:warning={tool} not found! Couldn't build tinyinst_rs");
             return false;
-        } else {
         }
     }
     return true;
