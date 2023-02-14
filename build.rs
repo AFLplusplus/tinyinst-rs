@@ -19,10 +19,16 @@ const TINYINST_DIRNAME: &str = "Tinyinst";
 const TINYINST_REVISION: &str = "cfb9b15a53e5e6489f2f72c77e804fb0a7af94b5";
 
 #[cfg(not(target_os = "linux"))]
-fn build_dep_check(tools: &[&str]) {
+fn build_dep_check(tools: &[&str]) -> bool {
     for tool in tools {
-        which(tool).unwrap_or_else(|_| panic!("Build tool {tool} not found"));
+        let found = which(tool);
+        if found.is_err() {
+            println!("cargo:warning={tool} not found! Couldn't build tinyinst_rs");
+            return false;
+        } else {
+        }
     }
+    return true;
 }
 
 #[cfg(target_os = "linux")]
@@ -33,7 +39,9 @@ fn main() {
 
 #[cfg(not(target_os = "linux"))]
 fn main() {
-    build_dep_check(&["git", "cxxbridge"]);
+    if !build_dep_check(&["git", "cxxbridge", "cmake"]) {
+        return;
+    }
 
     #[cfg(target_os = "windows")]
     let cmake_generator = "Visual Studio 17 2022";
