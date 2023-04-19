@@ -4,6 +4,7 @@ FFI to [TinyInst](https://github.com/googleprojectzero/TinyInst). Created for [L
 
 ## Dependencies
 
+* Visual Studio 2022
 * cxxbridge
 * cargo-make
 * python3
