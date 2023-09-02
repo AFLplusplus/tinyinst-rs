@@ -234,10 +234,10 @@ mod tests {
 
     #[cfg(target_os = "windows")]
     const TEST_FILENAME: &str = "test.exe";
-    #[cfg(target_vendor = "apple")]
+    #[cfg(any(target_vendor = "apple", target_os = "linux"))]
     const TEST_FILENAME: &str = "test";
 
-    #[cfg(target_vendor = "apple")]
+    #[cfg(any(target_vendor = "apple", target_os = "linux"))]
     const TEST_PATH: &str = "test/build/";
     #[cfg(target_os = "windows")]
     const TEST_PATH: &str = "test/build/Debug/";
