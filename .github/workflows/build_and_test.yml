@@ -40,7 +40,7 @@ jobs:
     # - name: Run tests
     #  run: cargo test --verbose
   linux: 
-    runs-on: Linux-latest
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - name: install cxxbridge
