@@ -1,24 +1,13 @@
-#[cfg(target_os = "linux")]
-use std::process::exit;
-
-#[cfg(not(target_os = "linux"))]
 use std::{env, fs, path::Path, process::Command};
 
-#[cfg(not(target_os = "linux"))]
 use cmake::Config;
-#[cfg(not(target_os = "linux"))]
 use git2::{Oid, Repository};
-#[cfg(not(target_os = "linux"))]
 use which::which;
 
-#[cfg(not(target_os = "linux"))]
 const TINYINST_URL: &str = "https://github.com/googleprojectzero/TinyInst.git";
-#[cfg(not(target_os = "linux"))]
 const TINYINST_DIRNAME: &str = "Tinyinst";
-#[cfg(not(target_os = "linux"))]
-const TINYINST_REVISION: &str = "cfb9b15a53e5e6489f2f72c77e804fb0a7af94b5";
+const TINYINST_REVISION: &str = "69ae1ff55eac8cb5d2e9a257c5650486ffe2af04";
 
-#[cfg(not(target_os = "linux"))]
 fn build_dep_check(tools: &[&str]) -> bool {
     for tool in tools {
         let found = which(tool);
@@ -30,13 +19,6 @@ fn build_dep_check(tools: &[&str]) -> bool {
     return true;
 }
 
-#[cfg(target_os = "linux")]
-fn main() {
-    println!("cargo:warning=Tinyinst doesn't support linux");
-    exit(0);
-}
-
-#[cfg(not(target_os = "linux"))]
 fn main() {
     if !build_dep_check(&["git", "cxxbridge", "cmake"]) {
         return;
@@ -46,6 +28,8 @@ fn main() {
     let cmake_generator = "Visual Studio 17 2022";
     #[cfg(target_vendor = "apple")]
     let cmake_generator = "Xcode";
+    #[cfg(target_os = "linux")]
+    let cmake_generator = "Unix Makefiles";
 
     let custom_tinyinst_generator =
         env::var_os("CUSTOM_TINYINST_GENERATOR").map(|x| x.to_string_lossy().to_string());
@@ -143,8 +127,15 @@ fn main() {
         &tinyinst_path.to_string_lossy()
     );
 
+    #[cfg(not(target_os = "linux"))]
     println!(
         "cargo:rustc-link-search={}/build/Release",
+        &tinyinst_path.to_string_lossy()
+    );
+
+    #[cfg(target_os = "linux")]
+    println!(
+        "cargo:rustc-link-search={}/build",
         &tinyinst_path.to_string_lossy()
     );
     println!(
@@ -168,7 +159,7 @@ fn main() {
     println!("cargo:rerun-if-changed=Tinyinst/litecov.cpp");
 }
 
-#[cfg(not(target_os = "linux"))]
+// #[cfg(not(target_os = "linux"))]
 fn copy_tinyinst_files(tinyinst_path: &Path) {
     // source
     Command::new("cxxbridge")
