@@ -14,6 +14,6 @@ categories = ["development-tools::testing", "os", "no-std"]
 cxx = { version = "1.0", default-features = false, features = ["alloc"] }
 
 [build-dependencies]
-cmake = "0.1"
-git2 = "0.16.0"
-which = "4.3.0"
+cmake = "0.1.54"
+git2 = "0.20.0"
+which = "7.0.2"
