@@ -118,6 +118,7 @@ fn main() {
             .build_target("tinyinst")
             .profile("Release") // without this, it goes into RelWithDbInfo folder??
             .out_dir(&tinyinst_path)
+            .define("CMAKE_POLICY_VERSION_MINIMUM", "3.5")
             .build();
     }
 
