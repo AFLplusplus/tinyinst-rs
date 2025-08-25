@@ -6,7 +6,7 @@ use which::which;
 
 const TINYINST_URL: &str = "https://github.com/googleprojectzero/TinyInst.git";
 const TINYINST_DIRNAME: &str = "Tinyinst";
-const TINYINST_REVISION: &str = "69ae1ff55eac8cb5d2e9a257c5650486ffe2af04";
+const TINYINST_REVISION: &str = "fc9938b07d3143ee12f1606f45852c0eee63a5d8";
 
 fn build_dep_check(tools: &[&str]) -> bool {
     for tool in tools {
