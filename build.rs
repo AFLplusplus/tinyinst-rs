@@ -152,7 +152,10 @@ fn main() {
     println!("cargo:rustc-link-lib=static=reil");
 
     #[cfg(target_os = "windows")]
-    println!("cargo:rustc-link-lib=dylib=dbghelp");
+    {
+        println!("cargo:rustc-link-lib=dylib=dbghelp");
+        println!("cargo:rustc-link-lib=dylib=advapi32");
+    }
 
     println!("cargo:rerun-if-changed=src/");
     println!("cargo:rerun-if-changed=src/tinyinst.rs");

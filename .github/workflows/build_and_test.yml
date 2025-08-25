@@ -17,10 +17,10 @@ jobs:
     - uses: ilammy/msvc-dev-cmd@v1
     - name: install cxxbridge
       run: cargo install cxxbridge-cmd
-    - name: install cargo-make
-      run: cargo install cargo-make
+    - name: install just
+      run: cargo install just
     - name: Compile test
-      run: cargo make build_test
+      run: just build_test
     - name: Build
       run: cargo build --verbose
     - name: Run tests
@@ -31,10 +31,10 @@ jobs:
     - uses: actions/checkout@v3
     - name: install cxxbridge
       run: cargo install cxxbridge-cmd
-    - name: install cargo-make
-      run: cargo install cargo-make
+    - name: install just
+      run: cargo install just
     - name: Compile test
-      run: cargo make build_test
+      run: just build_test
     - name: Build
       run: cargo build --verbose
     # - name: Run tests
@@ -45,10 +45,10 @@ jobs:
     - uses: actions/checkout@v3
     - name: install cxxbridge
       run: cargo install cxxbridge-cmd
-    - name: install cargo-make
-      run: cargo install cargo-make
+    - name: install just
+      run: cargo install just
     - name: Compile test
-      run: cargo make build_test
+      run: just build_test
     - name: Build
       run: cargo build --verbose
     - name: Run tests
