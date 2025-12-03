@@ -13,8 +13,9 @@ FFI to [TinyInst](https://github.com/googleprojectzero/TinyInst). Created for [L
 ## Running the test
 
 1. Open a terminal and set up your build environment (e.g. On Windows, run Developer Powershell / Developer CMD/ vcvars64.bat / vcvars32.bat)
-2. Run `cargo make build_test` to build the test binary
-3. Run `cargo test` to run the test
+2. Run `cargo install just` to install just.
+3. Run `just build_test` to build the test binary
+4. Run `cargo test` to run the test
 
 
 ## Optional ENV Variables

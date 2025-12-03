@@ -16,7 +16,7 @@ fn build_dep_check(tools: &[&str]) -> bool {
             return false;
         }
     }
-    return true;
+    true
 }
 
 fn main() {
@@ -44,7 +44,7 @@ fn main() {
 
     let custum_tinyinst_dir =
         env::var_os("CUSTOM_TINYINST_DIR").map(|x| x.to_string_lossy().to_string());
-    let custum_tinyinst_no_build = env::var("CUSTOM_TINYINST_NO_BUILD").is_ok();
+    let custom_tinyinst_no_build = env::var("CUSTOM_TINYINST_NO_BUILD").is_ok();
 
     println!("cargo:rerun-if-env-changed=CUSTOM_TINYINST_DIR");
     println!("cargo:rerun-if-env-changed=CUSTOM_TINYINST_NO_BUILD");
@@ -106,7 +106,7 @@ fn main() {
         }
         tinyinst_path
     };
-    if !custum_tinyinst_no_build {
+    if !custom_tinyinst_no_build {
         println!(
             "cargo:warning=Generating Bridge files. and building for {}",
             &tinyinst_path.to_string_lossy()

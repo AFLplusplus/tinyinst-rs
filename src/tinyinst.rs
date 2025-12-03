@@ -153,7 +153,7 @@ impl TinyInst {
 
         let mut tinyinst_args_ptr: Vec<*mut c_char> = tinyinst_args_cstr
             .iter()
-            .map(|arg| arg.as_ptr() as *mut c_char)
+            .map(|arg| arg.as_ptr().cast_mut())
             .collect();
         tinyinst_args_ptr.push(core::ptr::null_mut());
 
@@ -170,7 +170,7 @@ impl TinyInst {
 
         let mut program_args_ptr: Vec<*mut c_char> = program_args_cstr
             .iter()
-            .map(|arg| arg.as_ptr() as *mut c_char)
+            .map(|arg| arg.as_ptr().cast_mut())
             .collect();
         program_args_ptr.push(core::ptr::null_mut());
 
