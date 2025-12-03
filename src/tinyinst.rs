@@ -117,6 +117,7 @@ impl litecov::Coverage {
     }
 }
 
+/// The main `TinyInst` struct.
 pub struct TinyInst {
     tinyinst_ptr: UniquePtr<litecov::TinyInstInstrumentation>,
     program_args_cstr: Vec<CString>,
@@ -136,7 +137,7 @@ impl Debug for TinyInst {
 
 impl TinyInst {
     #[must_use]
-    pub unsafe fn new(tinyinst_args: &[String], program_args: &[String], timeout: u32) -> TinyInst {
+    pub fn new(tinyinst_args: &[String], program_args: &[String], timeout: u32) -> TinyInst {
         // commented out by domenukk:
         // a) would require call to a libc, c++ or rust std fn
         // b) The program could actually be in the PATH, so, not accessible as file.
@@ -158,6 +159,7 @@ impl TinyInst {
         tinyinst_args_ptr.push(core::ptr::null_mut());
 
         // Init TinyInst with TinyInst arguments.
+        //
         // # Safety
         // The arguments and pointers are valid at this point
         unsafe {
@@ -187,7 +189,13 @@ impl TinyInst {
         }
     }
 
+    /// Runs the target in litecov.
+    ///
+    /// # Safety
+    /// An insecure target can by design be unsafe to run.
     pub unsafe fn run(&mut self) -> litecov::RunResult {
+        // # Safety
+        // Runs the target program in litecov. Anything might happen.
         unsafe {
             self.tinyinst_ptr.pin_mut().Run(
                 i32::try_from(self.program_args_cstr.len()).unwrap(),
@@ -210,6 +218,7 @@ impl TinyInst {
     //     litecov::get_coverage_map(bitmap, map_size, self.coverage_ptr.pin_mut());
     // }
 
+    /// Gets the covered blocks as vec.
     pub fn vec_coverage(&mut self, afl_coverage: &mut Vec<u64>, clear_coverage: bool) {
         // Clear coverage if there was previous coverage
         afl_coverage.clear();
@@ -221,6 +230,8 @@ impl TinyInst {
         // This will mark coverage we have seen as already seen coverage and won't report it again.
         self.ignore_coverage();
     }
+
+    /// Mark coverage we have seen as already seen coverage to not report it again.
     fn ignore_coverage(&mut self) {
         self.tinyinst_ptr
             .pin_mut()
@@ -288,6 +299,7 @@ mod tests {
             assert_eq!(result, super::litecov::RunResult::OK);
         }
     }
+
     #[test]
     fn tinyinst_crash() {
         use alloc::{string::ToString, vec::Vec};
