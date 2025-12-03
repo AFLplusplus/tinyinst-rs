@@ -5,3 +5,4 @@ build/
 /TinyInst
 *.obj
 test_file.txt
+.vscode

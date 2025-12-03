@@ -157,11 +157,15 @@ impl TinyInst {
             .collect();
         tinyinst_args_ptr.push(core::ptr::null_mut());
 
-        // Init TinyInst with Tinyinst arguments.
-        tinyinst_ptr.pin_mut().Init(
-            i32::try_from(tinyinst_args.len()).unwrap(),
-            tinyinst_args_ptr.as_mut_ptr(),
-        );
+        // Init TinyInst with TinyInst arguments.
+        // # Safety
+        // The arguments and pointers are valid at this point
+        unsafe {
+            tinyinst_ptr.pin_mut().Init(
+                i32::try_from(tinyinst_args.len()).unwrap(),
+                tinyinst_args_ptr.as_mut_ptr(),
+            );
+        }
 
         let program_args_cstr: Vec<CString> = program_args
             .iter()
@@ -184,12 +188,14 @@ impl TinyInst {
     }
 
     pub unsafe fn run(&mut self) -> litecov::RunResult {
-        self.tinyinst_ptr.pin_mut().Run(
-            i32::try_from(self.program_args_cstr.len()).unwrap(),
-            self.program_args_ptr.as_mut_ptr(),
-            self.timeout,
-            self.timeout,
-        )
+        unsafe {
+            self.tinyinst_ptr.pin_mut().Run(
+                i32::try_from(self.program_args_cstr.len()).unwrap(),
+                self.program_args_ptr.as_mut_ptr(),
+                self.timeout,
+                self.timeout,
+            )
+        }
     }
 
     // pub unsafe fn bitmap_coverage(
