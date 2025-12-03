@@ -19,6 +19,7 @@ fn build_dep_check(tools: &[&str]) -> bool {
     true
 }
 
+#[allow(clippy::too_many_lines)]
 fn main() {
     if !build_dep_check(&["git", "cxxbridge", "cmake"]) {
         return;
@@ -34,7 +35,9 @@ fn main() {
     let custom_tinyinst_generator =
         env::var_os("CUSTOM_TINYINST_GENERATOR").map(|x| x.to_string_lossy().to_string());
 
-    env::set_var("CXXFLAGS", "-std=c++17");
+    // # Safety
+    // the env is only accessed here, single threaded
+    unsafe { env::set_var("CXXFLAGS", "-std=c++17") };
 
     let tinyinst_generator = if let Some(generator) = custom_tinyinst_generator.as_ref() {
         generator

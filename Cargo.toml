@@ -6,14 +6,15 @@ repository = "https://github.com/AFLplusplus/tinyinst-rs/"
 readme = "./README.md"
 license = "MIT OR Apache-2.0"
 keywords = ["bindings", "testing", "security"]
-version = "0.1.0"
-edition = "2021"
+version = "0.1.1"
+edition = "2024"
 categories = ["development-tools::testing", "os", "no-std"]
 
 [dependencies]
-cxx = { version = "1.0", default-features = false, features = ["alloc"] }
+# When changing this, also change all versions in build_and_test.yml
+cxx = { version = "=1.0.190", default-features = false, features = ["alloc"] }
 
 [build-dependencies]
 cmake = "0.1.54"
-git2 = "0.20.0"
-which = "7.0.2"
+git2 = "0.20.2"
+which = "8.0.0"

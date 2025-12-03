@@ -1,8 +1,8 @@
 /*!
  * Rust bindings for [`TinyInst`](https://github.com/googleprojectzero/TinyInst)
-*/
-
-#![allow(incomplete_features)]
+ */
+#![doc = include_str!("../README.md")]
+/*! */
 #![no_std]
 #![warn(clippy::cargo)]
 #![deny(clippy::cargo_common_metadata)]
@@ -45,7 +45,6 @@
         overflowing_literals,
         path_statements,
         patterns_in_fns_without_body,
-        private_in_public,
         unconditional_recursion,
         unused,
         unused_allocation,

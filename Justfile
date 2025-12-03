@@ -3,3 +3,6 @@ build_configure:
 
 build_test: build_configure
     cmake --build ./test/build --config Debug
+
+test: build_test
+    cargo test
